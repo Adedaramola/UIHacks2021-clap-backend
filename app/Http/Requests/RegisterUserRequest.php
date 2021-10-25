@@ -28,7 +28,7 @@ class RegisterUserRequest extends FormRequest
       return [
          'username' => 'required|string|unique:users',
          'name' => 'required|string',
-         'email' => 'required|string|email|unique:users',
+         'email' => 'required|string|email|indisposable|unique:users',
          'phone' => 'required|string|size:11',
          'type' => ['required', 'string', Rule::in(['user', 'merchant'])],
          'password' => ['required', 'string', Password::min(8)->mixedCase()->numbers()]

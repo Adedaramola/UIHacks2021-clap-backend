@@ -20,4 +20,10 @@ class Repository implements RepositoryInterface
    {
       return $this->model->create($attributes);
    }
+   
+
+   public function find($id): ?Model
+   {
+      return $this->model->find($id);
+   }
 }
