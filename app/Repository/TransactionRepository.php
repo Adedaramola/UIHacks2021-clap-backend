@@ -9,14 +9,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class TransactionRepository extends Repository
+class TransactionRepository extends Repository implements TransactionInterface
 {
    public function __construct(Transaction $model)
    {
       parent::__construct($model);
    }
 
-   public function create(array $attributes): Model
+   public function store(array $attributes): Model
    {
       return $this->model->create([
          'reference' => 'TRX' . Str::random(15),

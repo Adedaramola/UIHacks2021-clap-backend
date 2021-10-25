@@ -25,4 +25,16 @@ class WalletController extends Controller
          $request->amount
       );
    }
+
+   public function transactions(Request $request)
+   {
+      $transactions = $request->user()->wallet->transactions;
+
+      // dd($transactions);
+
+      return response()->json([
+         'status' => true,
+         'data' => $transactions
+      ]);
+   }
 }

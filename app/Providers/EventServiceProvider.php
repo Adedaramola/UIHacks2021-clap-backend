@@ -2,10 +2,14 @@
 
 namespace App\Providers;
 
-use App\Events\NewTransaction;
+use App\Events\NewCreditTransaction;
+use App\Events\NewDebitTransaction;
 use App\Listeners\CreateNewUserWallet;
-use App\Listeners\SendNewTransactionReceipt;
+use App\Listeners\SendCreditTransactionReceipt;
+use App\Listeners\SendDebitTransactionReceipt;
+use App\Listeners\SendWelcomeNotification;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -22,9 +26,17 @@ class EventServiceProvider extends ServiceProvider
          CreateNewUserWallet::class,
       ],
 
-      NewTransaction::class => [
-         SendNewTransactionReceipt::class,
+      NewDebitTransaction::class => [
+         SendDebitTransactionReceipt::class,
       ],
+
+      NewCreditTransaction::class => [
+         SendCreditTransactionReceipt::class,
+      ],
+
+      Verified::class => [
+         SendWelcomeNotification::class,
+      ]
    ];
 
    /**

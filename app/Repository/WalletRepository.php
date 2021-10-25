@@ -2,7 +2,9 @@
 
 namespace App\Repository;
 
-use App\Events\NewTransaction;
+use App\Events\NewCreditTransaction;
+use App\Events\NewDebitTransaction;
+use App\Interfaces\TransactionInterface;
 use App\Interfaces\WalletInterface;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
@@ -10,13 +12,16 @@ use Illuminate\Support\Facades\Hash;
 
 class WalletRepository extends Repository implements WalletInterface
 {
-   public function __construct(Wallet $model)
+   private $transactionRepository;
+
+   public function __construct(Wallet $model, TransactionInterface $transactionRepository)
    {
       parent::__construct($model);
+      $this->transactionRepository = $transactionRepository;
    }
 
 
-   public function credit(int $amount, $wallet_id)
+   public function credit(int $amount, $wallet_id, $purpose)
    {
       $wallet = $this->model->find($wallet_id);
 
@@ -34,8 +39,9 @@ class WalletRepository extends Repository implements WalletInterface
             ->where('id', $wallet_id)
             ->increment('balance', $amount);
 
-         $transaction = $this->create([
+         $transaction = $this->transactionRepository->store([
             'txn_type' => 'Credit',
+            'purpose' => $purpose,
             'amount' => $amount,
             'wallet_id' => $wallet_id,
             'balance_before' => $wallet->balance,
@@ -44,7 +50,7 @@ class WalletRepository extends Repository implements WalletInterface
 
          DB::commit();
 
-         event(new NewTransaction($transaction));
+         event(new NewCreditTransaction($transaction));
 
          return response()->json([
             'success' => true,
@@ -65,6 +71,7 @@ class WalletRepository extends Repository implements WalletInterface
    public function debit(
       int $amount,
       $wallet_id,
+      $purpose
    ) {
 
       $wallet = $this->model->find($wallet_id);
@@ -76,7 +83,7 @@ class WalletRepository extends Repository implements WalletInterface
          ]);
       }
 
-      if (!$wallet->balance < $amount) {
+      if ($wallet->balance < $amount) {
          return response()->json([
             'success' => false,
             'message' => 'Insufficient funds in wallet'
@@ -90,8 +97,9 @@ class WalletRepository extends Repository implements WalletInterface
             ->where('id', $wallet_id)
             ->decrement('balance', $amount);
 
-         $transaction = $this->create([
-            'txn_type' => 'Credit',
+         $transaction = $this->transactionRepository->store([
+            'txn_type' => 'Debit',
+            'purpose' => $purpose,
             'amount' => $amount,
             'wallet_id' => $wallet_id,
             'balance_before' => $wallet->balance,
@@ -100,7 +108,7 @@ class WalletRepository extends Repository implements WalletInterface
 
          DB::commit();
 
-         event(new NewTransaction($transaction));
+         event(new NewDebitTransaction($transaction));
 
          return response()->json([
             'success' => true,
@@ -120,34 +128,42 @@ class WalletRepository extends Repository implements WalletInterface
    public function payToWallet($pin, $sender, $receiver, int $amount)
    {
       $sender_wallet = $this->model->find($sender);
-      $receiver_wallet = $this->model->find($receiver);
 
-      if (!$sender_wallet) {
-         return response()->json([
-            'status' => false,
-            'message' => 'Sender wallet not found'
-         ]);
-      }
-
-      if (!$receiver_wallet) {
-         return response()->json([
-            'status' => false,
-            'message' => 'Target wallet not found'
-         ]);
-      }
-
-      if (!Hash::check($pin, $sender_wallet->pin)) {
-         return response()->json([
-            'status' => false,
-            'message' => 'Invalid pin entered'
-         ]);
+      if ($sender_wallet) {
+         if (!Hash::check($pin, $sender_wallet->pin)) {
+            return response()->json([
+               'status' => false,
+               'message' => 'Invalid pin entered'
+            ]);
+         }
       }
 
       DB::beginTransaction();
 
       try {
+         $debitStatus = ($this->debit($amount, $sender, 'transfer'))->original['success'];
+         $creditStatus = ($this->credit($amount, $receiver, 'transfer'))->original['success'];
+
+         if (!$debitStatus || !$creditStatus) {
+            return response()->json([
+               'status' => false,
+               'message' => 'Something went wrong. You have probably entered the wrong details'
+            ]);
+         }
+
+         DB::commit();
+
+         return response()->json([
+            'status' => true,
+            'message' => 'Transaction successfull'
+         ]);
       } catch (\Exception $err) {
          DB::rollBack();
+
+         return response()->json([
+            'status' => false,
+            'message' => 'Something went wrong: ' . $err->getMessage()
+         ]);
       }
    }
 }

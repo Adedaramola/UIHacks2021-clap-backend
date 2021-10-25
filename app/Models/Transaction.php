@@ -18,6 +18,7 @@ class Transaction extends Model
       'purpose',
       'amount',
       'narration',
+      'wallet_id',
       'balance_before',
       'balance_after'
    ];

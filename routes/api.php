@@ -22,12 +22,7 @@ Route::middleware(['auth'])->group(function () {
       ->middleware('signed');
 
    Route::middleware(['verified'])->group(function () {
-
-
-      // Route::post('wallet/deposit', [WalletController::class, 'deposit']);
-      // Route::post('wallet/withdraw', [WalletController::class, 'withdraw']);
-      // Route::get('wallet/transactions', [WalletController::class, 'transactions']);
+      Route::post('wallet/transfer', [WalletController::class, 'transfer']);
+      Route::get('wallet/transactions', [WalletController::class, 'transactions']);
    });
 });
-
-Route::post('wallet/transfer', [WalletController::class, 'transfer']);
