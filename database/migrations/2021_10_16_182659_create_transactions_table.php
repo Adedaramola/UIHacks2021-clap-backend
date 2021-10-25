@@ -15,7 +15,7 @@ class CreateTransactionsTable extends Migration
    {
       Schema::create('transactions', function (Blueprint $table) {
          $table->bigIncrements('id');
-         $table->string('wallet_tag');
+         $table->foreignUuid('wallet_id')->constrained();
          $table->uuid('reference')->unique()->index();
          $table->enum('txn_type', ['credit', 'debit']);
          $table->enum('purpose', ['deposit', 'transfer', 'withdrawal', 'reversal']);
@@ -27,8 +27,6 @@ class CreateTransactionsTable extends Migration
          $table->string('hash')->index()->nullable();
          $table->string('previousHash')->index()->nullable();
          $table->timestamps();
-
-         $table->foreign('wallet_tag')->references('tag')->on('wallets');
       });
    }
 

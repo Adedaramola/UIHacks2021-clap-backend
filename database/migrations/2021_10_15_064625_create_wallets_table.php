@@ -14,8 +14,7 @@ class CreateWalletsTable extends Migration
    public function up()
    {
       Schema::create('wallets', function (Blueprint $table) {
-         $table->bigIncrements('id');
-         $table->string('tag')->unique()->index();
+         $table->uuid('id')->primary();
          $table->foreignId('user_id')->constrained()->cascadeOnDelete();
          $table->integer('balance')->default(0);
          $table->string('pin');
