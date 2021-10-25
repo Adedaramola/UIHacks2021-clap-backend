@@ -18,8 +18,7 @@ A brief description of what this project does and who it's for
 | `username` | `string` | **Required**.  |
 | `email` | `string` | **Required**.  |
 | `phone` | `string` | **Required**.  |
-| `password` | `string` | **Required**.  Passwords must contain a mix of upper and lower case letters|
-| `is_stall` | `boolean` | **Optional**. Required only when registering a new stall |
+| `password` | `string` | **Required**.  Passwords must contain a mix of upper and lower case letters and numbers|
 
 #### Log a user in
 
