@@ -10,7 +10,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Notifications\ResetPassword;
 use App\Notifications\VerifyEmail;
 
-class User extends Authenticatable implements MustVerifyEmail, JWTSubject
+class User extends Authenticatable implements JWTSubject
 {
    use HasFactory, Notifiable;
 

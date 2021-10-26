@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Wallet extends Model
 {
    use HasFactory;
 
    protected $fillable = [
-      'id',
+      'tag',
       'balance',
       'pin',
    ];
@@ -28,5 +29,14 @@ class Wallet extends Model
    public function transactions()
    {
       return $this->hasMany(Transaction::class);
+   }
+
+   protected static function boot()
+   {
+      parent::boot();
+
+      self::creating(function ($model) {
+         $model->id = Str::uuid();
+      });
    }
 }

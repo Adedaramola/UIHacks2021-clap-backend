@@ -21,8 +21,6 @@ Route::middleware(['auth'])->group(function () {
       ->name('verification.verify')
       ->middleware('signed');
 
-   Route::middleware(['verified'])->group(function () {
-      Route::post('wallet/transfer', [WalletController::class, 'transfer']);
-      Route::get('wallet/transactions', [WalletController::class, 'transactions']);
-   });
+   Route::post('wallet/transfer', [WalletController::class, 'transfer']);
+   Route::get('wallet/transactions', [WalletController::class, 'transactions']);
 });

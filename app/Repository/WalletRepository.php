@@ -21,9 +21,10 @@ class WalletRepository extends Repository implements WalletInterface
    }
 
 
-   public function credit(int $amount, $wallet_id, $purpose)
+   public function credit(int $amount, $tag, $purpose)
    {
-      $wallet = $this->model->find($wallet_id);
+      $wallet = DB::table('wallets')->where('tag', $tag)->first();
+
 
       if (!$wallet) {
          return response()->json([
@@ -36,14 +37,14 @@ class WalletRepository extends Repository implements WalletInterface
 
       try {
          DB::table('wallets')
-            ->where('id', $wallet_id)
+            ->where('tag', $tag)
             ->increment('balance', $amount);
 
          $transaction = $this->transactionRepository->store([
             'txn_type' => 'Credit',
             'purpose' => $purpose,
             'amount' => $amount,
-            'wallet_id' => $wallet_id,
+            'wallet_id' => $wallet->id,
             'balance_before' => $wallet->balance,
             'balance_after' => $wallet->balance + $amount,
          ]);
@@ -70,11 +71,11 @@ class WalletRepository extends Repository implements WalletInterface
 
    public function debit(
       int $amount,
-      $wallet_id,
+      $tag,
       $purpose
    ) {
 
-      $wallet = $this->model->find($wallet_id);
+      $wallet = DB::table('wallets')->where('tag', $tag)->first();
 
       if (!$wallet) {
          return response()->json([
@@ -94,14 +95,14 @@ class WalletRepository extends Repository implements WalletInterface
 
       try {
          DB::table('wallets')
-            ->where('id', $wallet_id)
+            ->where('tag', $tag)
             ->decrement('balance', $amount);
 
          $transaction = $this->transactionRepository->store([
             'txn_type' => 'Debit',
             'purpose' => $purpose,
             'amount' => $amount,
-            'wallet_id' => $wallet_id,
+            'wallet_id' => $wallet->id,
             'balance_before' => $wallet->balance,
             'balance_after' => $wallet->balance - $amount,
          ]);
@@ -127,7 +128,15 @@ class WalletRepository extends Repository implements WalletInterface
 
    public function payToWallet($pin, $sender, $receiver, int $amount)
    {
-      $sender_wallet = $this->model->find($sender);
+      $sender_wallet = DB::table('wallets')->where('tag', $sender)->first();
+
+      // dd($sender_wallet);
+
+      if (auth()->user()->wallet->tag !== $sender_wallet->tag) {
+         return response()->json([
+            'message' => 'Unauthenticated'
+         ], 401);
+      }
 
       if ($sender_wallet) {
          if (!Hash::check($pin, $sender_wallet->pin)) {
@@ -147,7 +156,7 @@ class WalletRepository extends Repository implements WalletInterface
          if (!$debitStatus || !$creditStatus) {
             return response()->json([
                'status' => false,
-               'message' => 'Something went wrong. You have probably entered the wrong details'
+               'message' => 'Invalid inputs or insufficient funds'
             ]);
          }
 

@@ -25,6 +25,6 @@ class RegisterController extends Controller
 
       $token = Auth::attempt($request->only('email', 'password'));
 
-      return $this->sendTokenResponse($token, 'Verify your email');
+      return $this->sendTokenResponse($token);
    }
 }

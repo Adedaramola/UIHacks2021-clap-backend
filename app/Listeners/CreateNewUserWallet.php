@@ -29,7 +29,7 @@ class CreateNewUserWallet
    public function handle($event)
    {
       $event->user->wallet()->create([
-         'id' => '@' . $event->user->username,
+         'tag' => '@' . $event->user->username,
          'pin' => Hash::make('1234'),
       ]);
    }
